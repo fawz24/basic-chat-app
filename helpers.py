@@ -9,6 +9,7 @@ db_name = 'chat_network_programming'
 db_host = 'localhost'
 db_port = 27017
 
+#DB functions
 def get_db_instance(host=db_host, port=db_port):
     """Creates an instance of the database then returns that instance.
     If the database is already instanciated simply returns the existing instance."""

@@ -3,7 +3,6 @@
 import datetime
 import uuid
 import hashlib
-import flask
 import flask.sessions as sessions
 import helpers
 
@@ -33,11 +32,11 @@ class Message:
 
 class Group:
     """Group is a representation of a chat group"""
-    def __init__(self, name, creator, participants = None):
+    def __init__(self, name, creator, participants = None, date=None):
         self.name = name
         self.creator = creator
         self.participants = participants if participants else [creator]
-        self.date = datetime.datetime.now()
+        self.date = date if date else datetime.datetime.now()
         
     def compare(self, group):
         """Compare the name and creator fields of the current instance object to another instance object's same fields"""
@@ -56,8 +55,11 @@ class MongoSession(sessions.CallbackDict, sessions.SessionMixin):
 
 class MongoSessionInterface(sessions.SessionInterface):
     """Session interface implementation for managing flask sessions on mongodb"""
-    def __init__(self, host=helpers.db_host, port=helpers.db_port,
-                 db=helpers.db_name, collection='sessions'):
+    def __init__(self, host=None, port=None,
+                 db=None, collection='sessions'):
+        host = host if host else helpers.db_host
+        port = port if port else helpers.db_port
+        db = db if db else helpers.db_name
         client = helpers.get_db_instance(host, port)
         self.store = client[db][collection]
 
@@ -88,3 +90,4 @@ class MongoSessionInterface(sessions.SessionInterface):
         response.set_cookie(app.session_cookie_name, session.sid,
                             expires=self.get_expiration_time(app, session),
                             httponly=True, domain=domain)
+        
