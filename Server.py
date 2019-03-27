@@ -11,7 +11,8 @@ socketio = flask_socketio.SocketIO(app)
 def hello_world():
     return flask.render_template('index.html')
 
-@app.route('/login', methods=['POST']):
+@app.route('/login', methods=['POST'])
+def login():
     if flask.request.method == 'POST':
         flask.request.form['nickname']
 

@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import uuid
 import hashlib
+import flask
+import flask.sessions as sessions
+import helpers
 
 class User:
     """User defines a simple user in the chat"""
@@ -42,3 +46,45 @@ class Group:
         if self.creator != group.creator:
             return False
         return True
+    
+class MongoSession(sessions.CallbackDict, sessions.SessionMixin):
+    """A mongodb session information blueprint"""
+    def __init__(self, initial=None, sid=None):
+        sessions.CallbackDict.__init__(self, initial)
+        self.sid = sid
+        self.modified = False
+
+class MongoSessionInterface(sessions.SessionInterface):
+    """Session interface implementation for managing flask sessions on mongodb"""
+    def __init__(self, host=helpers.db_host, port=helpers.db_port,
+                 db=helpers.db_name, collection='sessions'):
+        client = helpers.get_db_instance(host, port)
+        self.store = client[db][collection]
+
+    def open_session(self, app, request):
+        sid = request.cookies.get(app.session_cookie_name)
+        if sid:
+            stored_session = self.store.find_one({'sid': sid})
+            if stored_session:
+                if stored_session.get('expiration') > datetime.datetime.utcnow():
+                    return MongoSession(initial=stored_session['data'],
+                                        sid=stored_session['sid'])
+        sid = str(uuid.uuid4())
+        return MongoSession(sid=sid)
+
+    def save_session(self, app, session, response):
+        domain = self.get_cookie_domain(app)
+        if not session:
+            response.delete_cookie(app.session_cookie_name, domain=domain)
+            return
+        if self.get_expiration_time(app, session):
+            expiration = self.get_expiration_time(app, session)
+        else:
+            expiration = datetime.utcnow() + datetime.timedelta(hours=1)
+        self.store.update({'sid': session.sid},
+                          {'sid': session.sid,
+                           'data': session,
+                           'expiration': expiration}, True)
+        response.set_cookie(app.session_cookie_name, session.sid,
+                            expires=self.get_expiration_time(app, session),
+                            httponly=True, domain=domain)

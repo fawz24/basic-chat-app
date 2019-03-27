@@ -5,18 +5,22 @@ import models
 
 mongo_client = None
 db = None
+db_name = 'chat_network_programming'
+db_host = 'localhost'
+db_port = 27017
 
-def get_db_instance():
+def get_db_instance(host=db_host, port=db_port):
     """Creates an instance of the database then returns that instance.
     If the database is already instanciated simply returns the existing instance."""
     global mongo_client
     global db
+    global db_name
     
     if mongo_client is None:
-        mongo_client = pymongo.MongoClient()
+        mongo_client = pymongo.MongoClient(host=host, port=port)
         
     if db is None:
-        db = mongo_client.get_database('chat_network_programming')
+        db = mongo_client.get_database(db_name)
     
     return db
 
