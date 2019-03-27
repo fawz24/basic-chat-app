@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import hashlib
 
 class User:
     """
     User defines a simple user in the chat
     """
     def __init__(self, nick_name, password):
+        h = hashlib.sha256()
+        h.update(password.encode())
         self.nick_name = nick_name
-        self.password = password
+        self.password = h.hexdigest()
         
+    def compare(self, user):
+        """Compares the nick_name and password fields of the current instance object and another instance object"""
+        if self.nick_name != user.nick_name:
+            return False
+        if self.password != user.password:
+            return False
+        return True
         
 class Message:
     """
