@@ -39,14 +39,14 @@ def get_user(user_name):
     
     user = db.users.find_one({'name': user_name})
     if user:
-        return models.User(user['name'], user['password'])
+        return models.User(user['name'], user['password'], groups=user['groups'])
     return None
 
 def save_user(user):
     """Saves a new user into the database."""
     db = get_db_instance()
     
-    db.users.insert_one({'name': user.nick_name, 'password': user.password})
+    db.users.insert_one({'name': user.nick_name, 'password': user.password, 'groups': user.groups})
     return user
 
 #Group functions
@@ -72,5 +72,6 @@ def save_group(group):
     db = get_db_instance()
     
     db.groups.insert_one({'name': group.name, 'creator': group.creator,
-                          'participants': group.participants, 'date': group.date})
+                          'participants': group.participants, 'date': group.date, 
+                          'reference': group.reference})
     return group
