@@ -20,14 +20,13 @@ def get_db_instance():
     
     return db
 
+#User functions
 def user_exists(user_name):
     """Checks if a user exists."""
     db = get_db_instance()
     
     user = db.users.find_one({"name": user_name})
-    if user:
-        return True
-    return False
+    return user is not None
 
 def get_user(user_name):
     """Retrieves informations about a particular user"""
@@ -44,3 +43,28 @@ def save_user(user):
     
     db.users.insert_one({'name': user.nick_name, 'password': user.password})
     return user
+
+#Group functions
+def group_exists(name):
+    """Checks if a group exists"""
+    db = get_db_instance()
+    
+    group = db.groups.find_one({'name': name})
+    return group is not None
+
+def get_group(name):
+    """Retrieves informations about a particular group"""
+    db = get_db_instance()
+    
+    group = db.groups.find_one({'name': name})
+    if group:
+        return models.Group()
+    return None
+
+def save_group(group):
+    """Saves a new group into the database"""
+    db = get_db_instance()
+    
+    db.groups.insert_one({'name': group.name, 'creator': group.creator,
+                          'participants': group.participants, 'date': group.date})
+    return group
