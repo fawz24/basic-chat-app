@@ -38,6 +38,7 @@ class Group:
         self.creator = creator
         self.participants = participants if participants else [creator]
         self.date = date if date else datetime.datetime.now()
+        self.reference = len(self.participants)
         
     def compare(self, group):
         """Compare the name and creator fields of the current instance object to another instance object's same fields"""
