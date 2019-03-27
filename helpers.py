@@ -37,3 +37,10 @@ def get_user(user_name):
     if user:
         return models.User(user['name'], user['password'])
     return None
+
+def save_user(user):
+    """Saves a new user into the database."""
+    db = get_db_instance()
+    
+    db.users.insert_one({'name': user.nick_name, 'password': user.password})
+    return user

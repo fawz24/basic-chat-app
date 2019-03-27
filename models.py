@@ -4,9 +4,7 @@ import datetime
 import hashlib
 
 class User:
-    """
-    User defines a simple user in the chat
-    """
+    """User defines a simple user in the chat"""
     def __init__(self, nick_name, password):
         h = hashlib.sha256()
         h.update(password.encode())
@@ -22,9 +20,7 @@ class User:
         return True
         
 class Message:
-    """
-    The Message class represents a message sent and received in a chat
-    """
+    """The Message class represents a message sent and received in a chat"""
     def __init__(self, receiver, sender, content):
         self.receiver = receiver
         self.sender = sender
@@ -32,9 +28,7 @@ class Message:
         self.date = datetime.datetime.now()
 
 class Group:
-    """
-    Group is a representation of a chat group
-    """
+    """Group is a representation of a chat group"""
     def __init__(self, name, creator):
         self.name = name
         self.creator = creator
