@@ -25,10 +25,11 @@ class User:
         
 class Message:
     """The Message class represents a message sent and received in a chat"""
-    def __init__(self, receiver, sender, content):
+    def __init__(self, receiver, sender, content, ms_type='simple'):
         self.receiver = receiver
         self.sender = sender
         self.content = content
+        self.type = ms_type
         self.date = datetime.datetime.now()
 
 class Group:
