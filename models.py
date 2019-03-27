@@ -8,11 +8,12 @@ import helpers
 
 class User:
     """User defines a simple user in the chat"""
-    def __init__(self, nick_name, password):
+    def __init__(self, nick_name, password, groups=None):
         h = hashlib.sha256()
         h.update(password.encode())
         self.nick_name = nick_name
         self.password = h.hexdigest()
+        self.groups = groups if groups else []
         
     def compare(self, user):
         """Compares the nick_name and password fields of the current instance object and another instance object"""
