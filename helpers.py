@@ -62,7 +62,8 @@ def get_group(name):
     
     group = db.groups.find_one({'name': name})
     if group:
-        return models.Group()
+        return models.Group(group['name'], group['creator'], 
+                            participants=group['participants'], date=group['date'])
     return None
 
 def save_group(group):
