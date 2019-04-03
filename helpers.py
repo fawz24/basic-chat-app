@@ -26,12 +26,10 @@ def get_db_instance(host=db_host, port=db_port):
     return db
 
 #User functions
-def user_exists(user_name):
-    """Checks if a user exists."""
-    db = get_db_instance()
-    
-    user = db.users.find_one({"nick_name": user_name})
-    return user is not None
+def user_exists(nick_name):
+    """Checks if a user exists.
+    Internally calls get_user function."""
+    return get_user(nick_name) is not None
 
 def user_document_2_user_instance(user):
     """Maps a mongodb user document to a User instance"""
@@ -56,29 +54,28 @@ def get_user(nick_name):
 
 def get_users():
     """Retrieves all registered users"""
-    users = set()
+    users = []
     
     db = get_db_instance()
     
     _users = db.users.find()
     for u in _users:
-        users.add(user_document_2_user_instance(u))
+        users.append(user_document_2_user_instance(u))
     return users
 
 def save_user(user):
     """Saves a new user into the database."""
     db = get_db_instance()
     
-    db.users.insert_one(user_instance_2_user_document(user))
-    return user
+    if isinstance(user, models.User):
+        db.users.insert_one(user_instance_2_user_document(user))
+        return user
 
 #Group functions
 def group_exists(name):
-    """Checks if a group exists"""
-    db = get_db_instance()
-    
-    group = db.groups.find_one({'name': name})
-    return group is not None
+    """Checks if a group exists.
+    Internally calls get_group function."""
+    return get_group(name) is not None
 
 def group_document_2_group_instance(group):
     """Maps a mongodb group document into a Group instance"""
@@ -107,20 +104,23 @@ def get_group(name):
 
 def get_groups():
     """Retrieves all available groups"""
-    groups = set()
+    groups = []
     
     db = get_db_instance()
         
     _groups = db.groups.find()
     for g in _groups:
-        groups.add(group_document_2_group_instance(g))
+        groups.append(group_document_2_group_instance(g))
     return groups
         
 def save_group(group):
     """Saves a new group into the database"""
     db = get_db_instance()
     
-    db.groups.insert_one(group_instance_2_group_document(group))
+    if isinstance(group, models.Group):
+        db.groups.insert_one(group_instance_2_group_document(group))
+        for u in group.participants:
+            join_group(group.name, u)
     return group
 
 def delete_group(name):
