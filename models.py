@@ -34,10 +34,10 @@ class Message:
 
 class Group:
     """Group is a representation of a chat group"""
-    def __init__(self, name, creator, participants = None, date=None, reference=None):
+    def __init__(self, name, creator, participants=None, date=None, reference=None):
         self.name = name
         self.creator = creator
-        self.participants = participants if participants else [creator]
+        self.participants = participants if participants != None else [creator]
         self.date = date if date else datetime.datetime.now()
         self.reference = reference if reference else len(self.participants)
         

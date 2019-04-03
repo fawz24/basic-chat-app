@@ -30,7 +30,7 @@ def user_exists(user_name):
     """Checks if a user exists."""
     db = get_db_instance()
     
-    user = db.users.find_one({"name": user_name})
+    user = db.users.find_one({"nick_name": user_name})
     return user is not None
 
 def user_document_2_user_instance(user):
@@ -54,11 +54,22 @@ def get_user(nick_name):
         return user_document_2_user_instance(user)
     return None
 
+def get_users():
+    """Retrieves all registered users"""
+    users = set()
+    
+    db = get_db_instance()
+    
+    _users = db.users.find()
+    for u in _users:
+        users.add(user_document_2_user_instance(u))
+    return users
+
 def save_user(user):
     """Saves a new user into the database."""
     db = get_db_instance()
     
-    db.users.insert_one({'nick_name': user.nick_name, 'password': user.password, 'groups': user.groups})
+    db.users.insert_one(user_instance_2_user_document(user))
     return user
 
 #Group functions
@@ -71,10 +82,10 @@ def group_exists(name):
 
 def group_document_2_group_instance(group):
     """Maps a mongodb group document into a Group instance"""
-    return models.Group(group['name'], 
-                        group['creator'], 
-                        participants=group['participants'], 
-                        date=group['date'], 
+    return models.Group(group['name'],
+                        group['creator'],
+                        participants=group['participants'],
+                        date=group['date'],
                         reference=group['reference'])
 
 def group_instance_2_group_document(group):
@@ -125,7 +136,8 @@ def delete_group(name):
             return True
         else:
             raise Exception(f'{name} still contains user(s)')
-    except Exception:
+    except Exception as e:
+        print(e)
         return False
     
 
@@ -139,19 +151,20 @@ def quit_group(gname, uname):
         ugroups = set(user.groups)
         gparticipants = set(group.participants)
         
+        print(f'previous ugroups: {ugroups}')
+        print(f'previous gparticipants: {gparticipants}')
+        
         ugroups.remove(group.name)
         gparticipants.remove(user.nick_name)
         
-        user.groups = ugroups
-        group.participants = gparticipants
+        user.groups = list(ugroups)
+        group.participants = list(gparticipants)
         group.reference = len(gparticipants)
         
-        db.users.update_one({'name': user.nick_name}, {"$set": {'groups': user.groups}})
+        db.users.update_one({'nick_name': user.nick_name}, {"$set": {'groups': user.groups}})
         db.groups.update_one({'name': group.name}, {"$set": {'participants': group.participants, 
                              'reference': group.reference}})
-        
         delete_group(group.name)
         
-    except Exception:
-        pass
-    
+    except Exception as e:
+        print(e)
