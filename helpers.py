@@ -120,9 +120,7 @@ def save_group(group):
     """Saves a new group into the database"""
     db = get_db_instance()
     
-    db.groups.insert_one({'name': group.name, 'creator': group.creator,
-                          'participants': group.participants, 'date': group.date, 
-                          'reference': group.reference})
+    db.groups.insert_one(group_instance_2_group_document(group))
     return group
 
 def delete_group(name):
@@ -168,3 +166,75 @@ def quit_group(gname, uname):
         
     except Exception as e:
         print(e)
+        
+#Message functions
+def message_document_2_message_instance(message):
+    """Maps a mongodb message document to a Message instance"""
+    try:
+        return models.Message(message['receiver'],
+                              message['sender'],
+                              message['content'],
+                              ms_type=message['type'],
+                              date=message['date'])
+    except:
+        return None
+
+def message_instance_2_message_document(message):
+    """Maps a Message instance to a mongodb message document"""
+    try:
+        return {'receiver': message.receiver,
+                'sender': message.sender,
+                'content': message.content,
+                'type': message.type,
+                'date': message.date}
+    except:
+        return None
+
+def get_simple_messages(receiver, sender):
+    """Retrieves informations about all messages sent by a particular user to a unique receiver and vice versa"""
+    messages = []
+    
+    db = get_db_instance()
+    
+    _messages = db.messages.find({'type': 'simple',
+                                'receiver': {'$in': [receiver, sender]},
+                                'sender': {'$in': [receiver, sender]}}).sort('date', pymongo.ASCENDING)
+   
+    if _messages:
+        for m in _messages:
+            messages.append(message_document_2_message_instance(m))
+    return messages
+
+def get_group_messages(receiver):
+    """Retrieves informations about all messages sent in a group"""
+    messages = []
+    
+    db = get_db_instance()
+    
+    _messages = db.messages.find({'type': 'group',
+                                'receiver': receiver}).sort('date', pymongo.ASCENDING)
+   
+    if _messages:
+        for m in _messages:
+            messages.append(message_document_2_message_instance(m))
+    return messages
+
+def get_broadcast_messages():
+    """Retrieves informations about all messages sent to all users"""
+    messages = []
+    
+    db = get_db_instance()
+    
+    _messages = db.messages.find({'type': 'broadcast'}).sort('date', pymongo.ASCENDING)
+   
+    if _messages:
+        for m in _messages:
+            messages.append(message_document_2_message_instance(m))
+    return messages
+
+def save_message(message):
+    """Saves a new message into the database."""
+    db = get_db_instance()
+    
+    db.messages.insert_one(message_instance_2_message_document(message))
+    return message
