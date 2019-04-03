@@ -149,9 +149,6 @@ def quit_group(gname, uname):
         ugroups = set(user.groups)
         gparticipants = set(group.participants)
         
-        print(f'previous ugroups: {ugroups}')
-        print(f'previous gparticipants: {gparticipants}')
-        
         ugroups.remove(group.name)
         gparticipants.remove(user.nick_name)
         
@@ -163,6 +160,29 @@ def quit_group(gname, uname):
         db.groups.update_one({'name': group.name}, {"$set": {'participants': group.participants, 
                              'reference': group.reference}})
         delete_group(group.name)
+        
+    except Exception as e:
+        print(e)
+        
+def join_group(gname, uname):
+    """Joins a user to a group"""
+    user = get_user(uname)
+    group = get_group(gname)
+    
+    try:
+        ugroups = set(user.groups)
+        gparticipants = set(group.participants)
+        
+        ugroups.add(group.name)
+        gparticipants.add(user.nick_name)
+        
+        user.groups = list(ugroups)
+        group.participants = list(gparticipants)
+        group.reference = len(group.participants)
+        
+        db.users.update_one({'nick_name': user.nick_name}, {"$set": {'groups': user.groups}})
+        db.groups.update_one({'name': group.name}, {"$set": {'participants': group.participants, 
+                             'reference': group.reference}})
         
     except Exception as e:
         print(e)
