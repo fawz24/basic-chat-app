@@ -34,12 +34,12 @@ class Message:
 
 class Group:
     """Group is a representation of a chat group"""
-    def __init__(self, name, creator, participants = None, date=None):
+    def __init__(self, name, creator, participants = None, date=None, reference=None):
         self.name = name
         self.creator = creator
         self.participants = participants if participants else [creator]
         self.date = date if date else datetime.datetime.now()
-        self.reference = len(self.participants)
+        self.reference = reference if reference else len(self.participants)
         
     def compare(self, group):
         """Compare the name and creator fields of the current instance object to another instance object's same fields"""

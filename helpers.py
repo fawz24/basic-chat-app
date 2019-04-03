@@ -57,16 +57,42 @@ def group_exists(name):
     group = db.groups.find_one({'name': name})
     return group is not None
 
+def group_document_2_group_instance(group):
+    """Maps a mongodb group document into a Group instance"""
+    return models.Group(group['name'], 
+                        group['creator'], 
+                        participants=group['participants'], 
+                        date=group['date'], 
+                        reference=group['reference'])
+
+def group_instance_2_group_document(group):
+    """Maps a Group instance into a mongodb group document"""
+    return {'name': group.name,
+            'creator': group.creator,
+            'participants': group.participants,
+            'date': group.date,
+            'reference': group.reference}
+
 def get_group(name):
     """Retrieves informations about a particular group"""
     db = get_db_instance()
     
     group = db.groups.find_one({'name': name})
     if group:
-        return models.Group(group['name'], group['creator'], 
-                            participants=group['participants'], date=group['date'])
+        return group_document_2_group_instance(group)
     return None
 
+def get_groups():
+    """Retrieves all available groups"""
+    groups = set()
+    
+    db = get_db_instance()
+        
+    _groups = db.groups.find()
+    for g in _groups:
+        groups.add(group_document_2_group_instance(g))
+    return groups
+        
 def save_group(group):
     """Saves a new group into the database"""
     db = get_db_instance()
@@ -75,3 +101,45 @@ def save_group(group):
                           'participants': group.participants, 'date': group.date, 
                           'reference': group.reference})
     return group
+
+def delete_group(name):
+    """Deletes a group.
+    Makes sure there is no user in the group."""
+    try:
+        group = get_group(name)
+        if group.reference == 0:
+            db.groups.delete_one({'name': group.name})
+            db.messages.delete_many({'type': 'group', 'receiver': name})
+            return True
+        else:
+            raise Exception(f'{name} still contains user(s)')
+    except Exception:
+        return False
+    
+
+def quit_group(gname, uname):
+    """Deletes the link between the user and the group.
+    Checks and updates the number of users in the group."""
+    user = get_user(uname)
+    group = get_group(gname)
+    
+    try:
+        ugroups = set(user.groups)
+        gparticipants = set(group.participants)
+        
+        ugroups.remove(group.name)
+        gparticipants.remove(user.nick_name)
+        
+        user.groups = ugroups
+        group.participants = gparticipants
+        group.reference = len(gparticipants)
+        
+        db.users.update_one({'name': user.nick_name}, {"$set": {'groups': user.groups}})
+        db.groups.update_one({'name': group.name}, {"$set": {'participants': group.participants, 
+                             'reference': group.reference}})
+        
+        delete_group(group.name)
+        
+    except Exception:
+        pass
+    
