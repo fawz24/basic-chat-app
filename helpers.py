@@ -33,20 +33,32 @@ def user_exists(user_name):
     user = db.users.find_one({"name": user_name})
     return user is not None
 
-def get_user(user_name):
+def user_document_2_user_instance(user):
+    """Maps a mongodb user document to a User instance"""
+    return models.User(user['nick_name'],
+                       user['password'],
+                       groups=user['groups'])
+
+def user_instance_2_user_document(user):
+    """Maps a User instance to a mongodb user document"""
+    return {'nick_name': user.nick_name,
+            'password': user.password,
+            'groups': user.groups}
+
+def get_user(nick_name):
     """Retrieves informations about a particular user"""
     db = get_db_instance()
     
-    user = db.users.find_one({'name': user_name})
+    user = db.users.find_one({'nick_name': nick_name})
     if user:
-        return models.User(user['name'], user['password'], groups=user['groups'])
+        return user_document_2_user_instance(user)
     return None
 
 def save_user(user):
     """Saves a new user into the database."""
     db = get_db_instance()
     
-    db.users.insert_one({'name': user.nick_name, 'password': user.password, 'groups': user.groups})
+    db.users.insert_one({'nick_name': user.nick_name, 'password': user.password, 'groups': user.groups})
     return user
 
 #Group functions
